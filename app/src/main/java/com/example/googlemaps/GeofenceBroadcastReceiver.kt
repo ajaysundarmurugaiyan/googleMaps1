@@ -1,58 +1,53 @@
 package com.example.googlemaps
 
-//import android.content.BroadcastReceiver
-//import android.content.Context
-//import android.content.Intent
-//import android.util.Log
-//import com.google.android.gms.location.Geofence
-//import com.google.android.gms.location.GeofencingEvent
-//
-//class GeofenceBroadcastReceiver : BroadcastReceiver() {
-//    override fun onReceive(context: Context?, intent: Intent?) {
-//        if (intent != null) {
-//            val geofencingEvent = GeofencingEvent.fromIntent(intent)
-//            if (geofencingEvent?.hasError() == true) {
-//                Log.e(TAG, "GeofencingEvent error: ${geofencingEvent.errorCode}")
-//                return
-//            }
-//
-//            val geofenceTransition = geofencingEvent?.geofenceTransition
-//            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-//                // Handle geofence transition event here
-//                Log.d(TAG, "Geofence transition: $geofenceTransition")
-//            } else {
-//                Log.e(TAG, "Invalid geofence transition type: $geofenceTransition")
-//            }
-//        }
-//    }
-//
-//    companion object {
-//        private const val TAG = "GeofenceBroadcastReceiver"
-//    }
-//}
-
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
-import com.google.androidbrowserhelper.trusted.NotificationUtils
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent != null) {
-            val geofenceTransition = GeofencingEvent.fromIntent(intent)?.geofenceTransition
-            val geofenceId = intent.getStringExtra("geofence_id")
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == "HuntMainActivity.treasureHunt.action.ACTION_GEOFENCE_EVENT"){
+            val geofencingEvent = GeofencingEvent.fromIntent(intent)
+            if (geofencingEvent == null || geofencingEvent.hasError()) {
+                Log.e("Geofence", "Geofence error")
+                return
+            }
+            val geofenceTransition = geofencingEvent.geofenceTransition
 
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-                NotificationUtils.createNotificationChannel(context, "Entered geofence")
-            } else if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-                NotificationUtils.createNotificationChannel(context, "Exited geofence")
+                sendNotification(context, "Entered into geofence")
+            }
+
+
+            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+                sendNotification(context, "Exit into geofence")
             }
         }
+
+    }
+
+    private fun sendNotification(context: Context, message: String) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "geofence_channel"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "Geofence Channel", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Geofence Notification")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notificationManager.notify(1, notification)
     }
 }
-
-
-
-

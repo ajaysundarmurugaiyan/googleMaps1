@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
@@ -40,16 +41,19 @@ class GeofencingManager(private val context: Context) {
                     // Failed to add geofence
                 }
             }
+        }else {
+            Log.e("Geofence", "Location permission not granted")
         }
     }
 
     private fun getGeofencePendingIntent(context: Context): PendingIntent {
         val intent = Intent(context, GeofenceBroadcastReceiver::class.java)
+        intent.action = "HuntMainActivity.treasureHunt.action.ACTION_GEOFENCE_EVENT"
         return PendingIntent.getBroadcast(
             context,
             GEOFENCE_PENDING_INTENT_ID,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
     }
 
